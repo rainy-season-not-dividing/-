@@ -80,3 +80,8 @@ void CGameControl::SetSecondHelpPoint(int nRow, int nCol)
     helpSecond.row = nRow;
     helpSecond.col = nCol;
 }
+
+void CGameControl::ClearMap()
+{
+    m_GameLogic.ClearMap();
+}

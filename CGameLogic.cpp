@@ -340,3 +340,15 @@ void CGameLogic::ResetMap()
         GameMap[nIndex2 / cols][nIndex2 % cols] = nTmp;
     }
 }
+
+// Çå¿ÕµØÍ¼
+void CGameLogic::ClearMap()
+{
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            GameMap[i][j] = BLANK;
+        }
+    }
+}

@@ -20,8 +20,10 @@
 #define IDC_BIN_RANK                    1010
 #define IDC_BIN_STOP                    1011
 #define IDC_BIN_HELP                    1012
-#define IDC_BIN_PROMPT                  1013
-#define IDC_BIN_RESET                   1014
+#define IDC_PRB_TIME                    1013
+#define IDC_BIN_PROMPT                  1014
+#define IDC_BIN_RESET                   1015
+#define IDC_EDIT_TIME                   1016
 
 // Next default values for new objects
 // 
@@ -29,7 +31,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        136
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1012
+#define _APS_NEXT_CONTROL_VALUE         1016
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -27,6 +27,8 @@ public:
     bool isBlank();
     bool GetPrompt(Vertex& v1, Vertex& v2); //在地图中查找两个可以相连的点， 用v1和v2返回
     void ResetMap();
+
+    void ClearMap();
 private:
     bool LinkInRow(Vertex V1, Vertex V2);
     bool LinkInCol(Vertex V1, Vertex V2);
@@ -35,4 +37,5 @@ private:
     bool LinkY(int Row1, int Row2, int Col);
     bool LinkX(int Row, int Col1, int Col2);
 
+    
 };

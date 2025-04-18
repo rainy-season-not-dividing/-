@@ -201,7 +201,7 @@ void C欢乐连连看Dlg::OnBnClickedBinBasic()
 
 	// 显示游戏界面，模拟显示
 	CGameDIg dlg;
-	dlg.SetGameMode(1);
+	dlg.SetGameMode(0);
 	dlg.DoModal();
 
 	// 展示主界面
@@ -219,7 +219,7 @@ void C欢乐连连看Dlg::OnBnClickedBinRelax()
 
 	// 显示游戏界面，模拟显示
 	CGameDIg dlg;
-	dlg.SetGameMode(0);
+	dlg.SetGameMode(1);
 	dlg.DoModal();
 
 	// 展示主界面

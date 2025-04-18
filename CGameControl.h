@@ -23,4 +23,6 @@ public:
 
     bool GetPrompt(stack<Vertex>& verList);
     void ResetMap();
+
+    void ClearMap();
 };

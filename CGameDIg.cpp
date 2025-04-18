@@ -1,9 +1,12 @@
 ﻿﻿// CGameDIg.cpp: 实现文件
 
 #include "pch.h"
+#include <afxwin.h>
+#include <afxcmn.h>
 #include "欢乐连连看.h"
 #include "afxdialogex.h"
 #include "CGameDIg.h"
+
 
 // 正确定义类的静态成员变量
 CString CGameDIg::BGPath;
@@ -44,7 +47,9 @@ CGameDIg::~CGameDIg()
 void CGameDIg::DoDataExchange(CDataExchange* pDX)
 {
     CDialogEx::DoDataExchange(pDX);
+    DDX_Control(pDX, IDC_PRB_TIME, GameProgress);       //将滚动条和空间绑定在一起
 }
+
 
 BEGIN_MESSAGE_MAP(CGameDIg, CDialogEx)
     ON_WM_PAINT()
@@ -53,6 +58,10 @@ BEGIN_MESSAGE_MAP(CGameDIg, CDialogEx)
     ON_BN_CLICKED(IDC_BIN_PROMPT, &CGameDIg::OnClickedBtnPrompt)
     ON_BN_CLICKED(IDC_BIN_RESET, &CGameDIg::OnClickedBtnReset)
     ON_WM_LBUTTONUP()
+    ON_EN_CHANGE(IDC_EDIT_TIME, &CGameDIg::OnEnChangeEdit1)
+    
+    
+    ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 // CGameDIg 消息处理程序
@@ -192,14 +201,25 @@ void CGameDIg::SetGameMode(int mode)
 
 void CGameDIg::InitMode(int mode)
 {
-    if (mode == 1)
+    CProgressCtrl* pProgressCtrl = (CProgressCtrl*)GetDlgItem(IDC_PRB_TIME);
+    CEdit* pEdit = (CEdit*)GetDlgItem(IDC_EDIT_TIME);
+    if (mode == 0)
     {
         this->SetWindowTextW(_T("欢乐连连看--基本模式"));
+        pEdit->EnableWindow(FALSE);
     }
-    else if (mode == 0)
+    else if (mode == 1)
+    {
         this->SetWindowTextW(_T("欢乐连连看--体闲模式"));
+        pProgressCtrl->ShowWindow(SW_HIDE);
+        pEdit->ShowWindow(SW_HIDE);     //体闲模式，隐藏控件
+    }
     else
+    {
         this->SetWindowTextW(_T("欢乐连连看--关卡模式"));
+        pEdit->EnableWindow(FALSE);
+    }
+
 }
 
 // 开始游戏按钮
@@ -216,6 +236,11 @@ void CGameDIg::OnClickedBtnStart()
         // 设置按钮
         SetButton(FALSE, TRUE, TRUE, TRUE);
         UpdateMap(); // 展示地图信息
+
+        // 如果不是体闲模式，则设置滚动条和定时器
+        if (this->GameMode != 1) {
+            SetGameProgress(PROGRESS);
+        }
     }
     else
         AfxMessageBox(L"行列和图片个数不匹配，无法绘制地图！", MB_OKCANCEL);
@@ -425,4 +450,54 @@ void CGameDIg::OnLButtonUp(UINT nFlags, CPoint point)
     }
     firstSelect = !firstSelect; // 第一次和第二次点击切换标志
     CDialogEx::OnLButtonUp(nFlags, point);
+}
+
+
+
+void CGameDIg::OnEnChangeEdit1()
+{
+    // TODO:  如果该控件是 RICHEDIT 控件，它将不
+    // 发送此通知，除非重写 CDialogEx::OnInitDialog()
+    // 函数并调用 CRichEditCtrl().SetEventMask()，
+    // 同时将 ENM_CHANGE 标志“或”运算到掩码中。
+
+    // TODO:  在此添加控件通知处理程序代码
+}
+
+void CGameDIg::SetGameProgress(int range)
+{
+    GameProgress.SetRange(0, range);
+    GameProgress.SetStep(-1);
+    GameProgress.SetPos(range);
+    TimeCount = range;
+    this->SetTimer(1, 1000, NULL);
+}
+
+
+
+void CGameDIg::OnTimer(UINT_PTR nIDEvent)
+{
+    // TODO: 在此添加消息处理程序代码和/或调用默认值
+    if (playing)
+    {
+        CString str;
+        str.Format(_T("%d"), TimeCount - 1);
+        SetDlgItemText(IDC_EDIT_TIME, str);
+        UpdateData(false);
+        TimeCount--;
+        GameProgress.StepIt();
+
+        if (TimeCount == 0)
+        {
+            KillTimer(1);
+            m_GameC.ClearMap();
+            m_dcMem.BitBlt(0, 0, 800, 600, &m_dcBG, 0, 0, SRCCOPY);
+            UpdateMap();
+            InvalidateRect(FALSE);
+            MessageBox(TEXT("时间到！游戏失败！"));
+            SetButton(TRUE, FALSE, FALSE, FALSE);
+            playing = false;
+        }
+    }
+    CDialogEx::OnTimer(nIDEvent);
 }

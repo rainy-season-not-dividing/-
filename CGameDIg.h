@@ -32,6 +32,9 @@ private:
 	int m_nClientWidth;	 // 当前客户区宽度
 	int m_nClientHeight; // 当前客户区高度
 
+	CProgressCtrl GameProgress;		//创建一个滚动条对象
+	int TimeCount;					//创建一个时间量
+
 	// 按钮原始位置和大小
 	struct ButtonInfo
 	{
@@ -82,6 +85,13 @@ private:
 	void SaveButtonPositions(void);	  // 保存按钮原始位置
 	void UpdateButtonPositions(void); // 更新按钮位置
 
+	
+	void SetGameProgress(int range);
+
 public:
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point); // 鼠标左键松开事件
+	afx_msg void OnEnChangeEdit1();
+
+
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };
