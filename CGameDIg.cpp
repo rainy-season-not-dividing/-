@@ -1,5 +1,4 @@
-﻿// CGameDIg.cpp: 实现文件
-//
+﻿﻿// CGameDIg.cpp: 实现文件
 
 #include "pch.h"
 #include "欢乐连连看.h"
@@ -15,7 +14,7 @@ CString CGameDIg::MaskPath;    // 掩码图片路径
 
 IMPLEMENT_DYNAMIC(CGameDIg, CDialogEx)
 
-CGameDIg::CGameDIg(CWnd *pParent /*=nullptr*/)
+CGameDIg::CGameDIg(CWnd* pParent /*=nullptr*/)
     : CDialogEx(IDD_GAME_DIALOG, pParent)
 {
     // 资源路径
@@ -42,55 +41,27 @@ CGameDIg::~CGameDIg()
 {
 }
 
-void CGameDIg::DoDataExchange(CDataExchange *pDX)
+void CGameDIg::DoDataExchange(CDataExchange* pDX)
 {
     CDialogEx::DoDataExchange(pDX);
 }
 
 BEGIN_MESSAGE_MAP(CGameDIg, CDialogEx)
-ON_WM_PAINT()
-ON_BN_CLICKED(IDC_BIN_START, &CGameDIg::OnClickedBtnStart)
-ON_BN_CLICKED(IDC_BIN_STOP, &CGameDIg::OnClickedBtnStop)
-ON_BN_CLICKED(IDC_BIN_PROMPT, &CGameDIg::OnClickedBtnPrompt)
-ON_BN_CLICKED(IDC_BIN_RESET, &CGameDIg::OnClickedBtnReset)
-ON_WM_LBUTTONUP()
+    ON_WM_PAINT()
+    ON_BN_CLICKED(IDC_BIN_START, &CGameDIg::OnClickedBtnStart)
+    ON_BN_CLICKED(IDC_BIN_STOP, &CGameDIg::OnClickedBtnStop)
+    ON_BN_CLICKED(IDC_BIN_PROMPT, &CGameDIg::OnClickedBtnPrompt)
+    ON_BN_CLICKED(IDC_BIN_RESET, &CGameDIg::OnClickedBtnReset)
+    ON_WM_LBUTTONUP()
 END_MESSAGE_MAP()
 
 // CGameDIg 消息处理程序
 
-/*
-void CGameDIg::InitBackground(void)
-{
-    //加载背景，留着后面更新地图的使用
-    HANDLE Backbmp = ::LoadImageW(NULL, BGPath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    CClientDC dc(this);
-
-    m_dcBG.CreateCompatibleDC(&dc);
-    m_dcBG.SelectObject(Backbmp);
-
-    //加载内存
-    m_dcMem.CreateCompatibleDC(&dc);
-    CBitmap bmpMem;
-
-    m_dcMem.BitBlt(0, 0, 800, 600, &m_dcBG, 0, 0, SRCCOPY);
-
-    //处理窗口
-    CRect rtWin;
-    CRect rtClient;
-    this->GetWindowRect(rtWin);
-    this->GetClientRect(rtClient);
-    int nSpanWidth = rtWin.Width() - rtClient.Width();
-    int nSpanHeight = rtWin.Height() - rtClient.Height();
-
-    MoveWindow(0, 0, 800 + nSpanWidth, 600 + nSpanHeight);
-    CenterWindow();
-}
-*/
 void CGameDIg::InitBackground(void)
 {
     // 加载背景，留着后面更新地图的使用
     HANDLE Backbmp = ::LoadImageW(NULL, BGPath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    CBitmap *pOldBitmap = nullptr; // 提前声明 pOldBitmap
+    CBitmap* pOldBitmap = nullptr; // 提前声明 pOldBitmap
     if (Backbmp == NULL)
     {
         DWORD error = GetLastError();
@@ -109,7 +80,7 @@ void CGameDIg::InitBackground(void)
     if (Backbmp != NULL)
     {
         HBITMAP hBitmap = static_cast<HBITMAP>(Backbmp);
-        pOldBitmap = m_dcBG.SelectObject(static_cast<CBitmap *>(CBitmap::FromHandle(hBitmap)));
+        pOldBitmap = m_dcBG.SelectObject(static_cast<CBitmap*>(CBitmap::FromHandle(hBitmap)));
         if (pOldBitmap == NULL)
         {
             AfxMessageBox(_T("Failed to select background bitmap into DC."));
@@ -252,22 +223,49 @@ void CGameDIg::OnClickedBtnStart()
     InvalidateRect(FALSE);
 }
 
-// 暂停游戏按钮
+//暂停游戏按钮
 void CGameDIg::OnClickedBtnStop()
 {
-    // TODO: 在此添加控件通知处理程序代码
+    if (playing)
+    {
+        this->GetDlgItem(IDC_BIN_STOP)->SetWindowText(L"重新开始");
+        playing = false;
+    }
+    else
+    {
+        this->GetDlgItem(IDC_BIN_STOP)->SetWindowText(L"暂停游戏");
+        playing = true;
+    }
 }
 
-// 提示按钮
+//提示按钮
 void CGameDIg::OnClickedBtnPrompt()
 {
-    // TODO: 在此添加控件通知处理程序代码
+    if (!playing) return;
+    stack<Vertex> verList;
+    bool success = m_GameC.GetPrompt(verList);
+    cout << "Success:" << success << endl;
+    if (success)
+    {
+        //重新加载地图背景，并更新最新地图
+        m_dcMem.BitBlt(0, 0, 800, 600, &m_dcBG, 0, 0, SRCCOPY);
+        UpdateMap();
+        //画线
+        DrawTipFrame(m_GameC.helpFirst.row, m_GameC.helpFirst.col);
+        DrawTipFrame(m_GameC.helpSecond.row, m_GameC.helpSecond.col);
+        DrawTipLine(verList);
+    }
 }
 
-// 重拍按钮
+//重排按钮
 void CGameDIg::OnClickedBtnReset()
 {
-    // TODO: 在此添加控件通知处理程序代码
+    if (!playing) return;
+    m_GameC.ResetMap();
+    firstSelect = true;
+    m_dcMem.BitBlt(0, 0, 800, 600, &m_dcBG, 0, 0, SRCCOPY);
+    UpdateMap();
+    InvalidateRect(FALSE);
 }
 
 // 按钮状态变化
@@ -346,7 +344,7 @@ void CGameDIg::DrawTipLine(stack<Vertex> verList)
 {
     CClientDC dc(this);
     CPen penLine(PS_SOLID, 2, RGB(0, 255, 0));
-    CPen *pOldPen = dc.SelectObject(&penLine);
+    CPen* pOldPen = dc.SelectObject(&penLine);
     Vertex vTop;
     CPoint cp;
     if (!verList.empty())

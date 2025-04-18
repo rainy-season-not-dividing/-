@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "CGameLogic.h"
 
+
+
 CGameLogic::~CGameLogic()
 {
     for (int i = 0; i < rows; i++)
@@ -25,6 +27,9 @@ void CGameLogic::InitMap(int nRows, int nCols, int nPicNum)
         GameMap[i] = new int[nCols];
         memset(GameMap[i], NULL, sizeof(int) * nCols);
     }
+    this->rows = nRows;  // 初始化 rows
+    this->cols = nCols;
+    this->picNum = nPicNum;
     //用图片编号填充地图
     int nRepeatNum = (nRows * nCols) / nPicNum;
     int nCount = 0;
@@ -285,4 +290,53 @@ void CGameLogic::ClearVerList()
 {
     //利用swap操作速度比pop快2/3
     stack<Vertex>().swap(verList);
+}
+
+
+//在地图中查找两个可以相连的点，用V1和V2返回
+bool CGameLogic::GetPrompt(Vertex& V1, Vertex& V2)
+{
+    for (int row1 = 0; row1 < rows; row1++)
+    {
+        for (int col1 = 0; col1 < cols; col1++)
+        {
+            int nFirstElem = GetElement(row1, col1);
+            if (nFirstElem == BLANK) continue;
+            //设置第一个节点
+            V1.row = row1; V1.col = col1; V1.info = nFirstElem;
+            for (int row2 = row1; row2 < rows; row2++)
+            {
+                //取第二点的初始col，如果同行，则从col1+1位置开始，即下一个元素
+                //如果不同行，则从头开始查找，即col为0
+                int col = row2 == row1 ? col1 + 1 : 0;
+                for (int col2 = col; col2 < cols; col2++)
+                {
+                    int nSecondElem = GetElement(row2, col2);
+                    if (nSecondElem == BLANK) continue;
+                    //设置第二个节点
+                    V2.row = row2; V2.col = col2; V2.info = nSecondElem;
+                    if (IsLink(V1, V2)) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+void CGameLogic::ResetMap()
+{
+    //将图片随机打散
+    srand((int)time(NULL));
+    int nVertexNum = rows * cols;
+    for (int i = 0; i < nVertexNum; i++)
+    {
+        int nIndex1 = rand() % nVertexNum;
+        int nIndex2 = rand() % nVertexNum;
+        //两个下标交换
+        int nTmp = GameMap[nIndex1 / cols][nIndex1 % cols];
+        GameMap[nIndex1 / cols][nIndex1 % cols] = GameMap[nIndex2 / cols][nIndex2 % cols];
+        GameMap[nIndex2 / cols][nIndex2 % cols] = nTmp;
+    }
 }

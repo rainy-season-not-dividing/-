@@ -15,14 +15,13 @@
 #define IDC_BIN_BASIC                   1005
 #define IDC_BIN_RELAX                   1006
 #define IDC_BIN_LEVEL                   1007
-#define IDC_BTN_START                   1007
-#define IDC_BIN_START                   1007
-#define IDC_BIN_SETTING                 1008
-#define IDC_BIN_RANK                    1009
-#define IDC_BIN_STOP                    1009
-#define IDC_BIN_HELP                    1010
-#define IDC_BIN_PROMPT                  1010
-#define IDC_BIN_RESET                   1011
+#define IDC_BIN_START                   1008
+#define IDC_BIN_SETTING                 1009
+#define IDC_BIN_RANK                    1010
+#define IDC_BIN_STOP                    1011
+#define IDC_BIN_HELP                    1012
+#define IDC_BIN_PROMPT                  1013
+#define IDC_BIN_RESET                   1014
 
 // Next default values for new objects
 // 

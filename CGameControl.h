@@ -6,6 +6,8 @@ class CGameControl
 public:
     Vertex selFirst;  //选择的第一个点
     Vertex selSecond; //选择的第二个点
+    Vertex helpFirst;       //提示的第一个点
+    Vertex helpSecond;      // 提示的第二个点
     CGameLogic m_GameLogic;  //实现具体的逻辑
 public:
     CGameControl();  //带参数的构造函数
@@ -15,4 +17,10 @@ public:
     void SetSecondPoint(int nRow, int nCol);
     bool Link(stack<Vertex>& verList);  //判断selFirst和selSecond是否相连,相连路径放在verList中
     bool isWin();  //判断游戏是否结束
+
+    void SetFirstHelpPoint(int nRow, int nCol);
+    void SetSecondHelpPoint(int nRow, int nCol);
+
+    bool GetPrompt(stack<Vertex>& verList);
+    void ResetMap();
 };
