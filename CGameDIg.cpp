@@ -7,7 +7,6 @@
 #include "afxdialogex.h"
 #include "CGameDIg.h"
 
-
 // 正确定义类的静态成员变量
 CString CGameDIg::BGPath;
 CString CGameDIg::ElementPath; // 元素图片路径
@@ -17,13 +16,20 @@ CString CGameDIg::MaskPath;    // 掩码图片路径
 
 IMPLEMENT_DYNAMIC(CGameDIg, CDialogEx)
 
-CGameDIg::CGameDIg(CWnd* pParent /*=nullptr*/)
+CGameDIg::CGameDIg(CWnd *pParent /*=nullptr*/)
     : CDialogEx(IDD_GAME_DIALOG, pParent)
 {
     // 资源路径
     BGPath = _T("res/fruit_bg.bmp");
     ElementPath = _T("res/fruit_element.bmp");
     MaskPath = _T("res/fruit_mask.bmp");
+
+    // 音频资源路径
+    m_strBGMusicPath = _T("sounds\\bgm.mp3");
+    m_strClickSoundPath = _T("sounds\\fruit_click.wav");
+    m_strClickPicSoundPath = _T("sounds\\fruit_clear.wav");
+    m_strEliminateSoundPath = _T("sounds\\power.mp3");
+    m_bPlayingBGMusic = FALSE;
 
     m_GameRegionTop.y = MAP_TOP;  // 50
     m_GameRegionTop.x = MAP_LEFT; // 20
@@ -42,26 +48,26 @@ CGameDIg::CGameDIg(CWnd* pParent /*=nullptr*/)
 
 CGameDIg::~CGameDIg()
 {
+    // 清理音频资源
+    CleanupAudio();
 }
 
-void CGameDIg::DoDataExchange(CDataExchange* pDX)
+void CGameDIg::DoDataExchange(CDataExchange *pDX)
 {
     CDialogEx::DoDataExchange(pDX);
-    DDX_Control(pDX, IDC_PRB_TIME, GameProgress);       //将滚动条和空间绑定在一起
+    DDX_Control(pDX, IDC_PRB_TIME, GameProgress); // 将滚动条和空间绑定在一起
 }
 
-
 BEGIN_MESSAGE_MAP(CGameDIg, CDialogEx)
-    ON_WM_PAINT()
-    ON_BN_CLICKED(IDC_BIN_START, &CGameDIg::OnClickedBtnStart)
-    ON_BN_CLICKED(IDC_BIN_STOP, &CGameDIg::OnClickedBtnStop)
-    ON_BN_CLICKED(IDC_BIN_PROMPT, &CGameDIg::OnClickedBtnPrompt)
-    ON_BN_CLICKED(IDC_BIN_RESET, &CGameDIg::OnClickedBtnReset)
-    ON_WM_LBUTTONUP()
-    ON_EN_CHANGE(IDC_EDIT_TIME, &CGameDIg::OnEnChangeEdit1)
-    
-    
-    ON_WM_TIMER()
+ON_WM_PAINT()
+ON_BN_CLICKED(IDC_BIN_START, &CGameDIg::OnClickedBtnStart)
+ON_BN_CLICKED(IDC_BIN_STOP, &CGameDIg::OnClickedBtnStop)
+ON_BN_CLICKED(IDC_BIN_PROMPT, &CGameDIg::OnClickedBtnPrompt)
+ON_BN_CLICKED(IDC_BIN_RESET, &CGameDIg::OnClickedBtnReset)
+ON_WM_LBUTTONUP()
+ON_EN_CHANGE(IDC_EDIT_TIME, &CGameDIg::OnEnChangeEdit1)
+
+ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 // CGameDIg 消息处理程序
@@ -70,7 +76,7 @@ void CGameDIg::InitBackground(void)
 {
     // 加载背景，留着后面更新地图的使用
     HANDLE Backbmp = ::LoadImageW(NULL, BGPath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    CBitmap* pOldBitmap = nullptr; // 提前声明 pOldBitmap
+    CBitmap *pOldBitmap = nullptr; // 提前声明 pOldBitmap
     if (Backbmp == NULL)
     {
         DWORD error = GetLastError();
@@ -89,7 +95,7 @@ void CGameDIg::InitBackground(void)
     if (Backbmp != NULL)
     {
         HBITMAP hBitmap = static_cast<HBITMAP>(Backbmp);
-        pOldBitmap = m_dcBG.SelectObject(static_cast<CBitmap*>(CBitmap::FromHandle(hBitmap)));
+        pOldBitmap = m_dcBG.SelectObject(static_cast<CBitmap *>(CBitmap::FromHandle(hBitmap)));
         if (pOldBitmap == NULL)
         {
             AfxMessageBox(_T("Failed to select background bitmap into DC."));
@@ -201,8 +207,8 @@ void CGameDIg::SetGameMode(int mode)
 
 void CGameDIg::InitMode(int mode)
 {
-    CProgressCtrl* pProgressCtrl = (CProgressCtrl*)GetDlgItem(IDC_PRB_TIME);
-    CEdit* pEdit = (CEdit*)GetDlgItem(IDC_EDIT_TIME);
+    CProgressCtrl *pProgressCtrl = (CProgressCtrl *)GetDlgItem(IDC_PRB_TIME);
+    CEdit *pEdit = (CEdit *)GetDlgItem(IDC_EDIT_TIME);
     if (mode == 0)
     {
         this->SetWindowTextW(_T("欢乐连连看--基本模式"));
@@ -212,19 +218,21 @@ void CGameDIg::InitMode(int mode)
     {
         this->SetWindowTextW(_T("欢乐连连看--体闲模式"));
         pProgressCtrl->ShowWindow(SW_HIDE);
-        pEdit->ShowWindow(SW_HIDE);     //体闲模式，隐藏控件
+        pEdit->ShowWindow(SW_HIDE); // 体闲模式，隐藏控件
     }
     else
     {
         this->SetWindowTextW(_T("欢乐连连看--关卡模式"));
         pEdit->EnableWindow(FALSE);
     }
-
 }
 
 // 开始游戏按钮
 void CGameDIg::OnClickedBtnStart()
 {
+    // 播放点击音效
+    PlayClickSound();
+
     // 初始化地图，地图用一个二维数组保存
     bool status = m_GameC.StartGame(Rows, Cols, PicNum);
     if (status) // 初始化地图成功
@@ -237,18 +245,22 @@ void CGameDIg::OnClickedBtnStart()
         SetButton(FALSE, TRUE, TRUE, TRUE);
         UpdateMap(); // 展示地图信息
 
-        //根据关卡模式设置滚动条和定时器
-        //休闲模式不设置
+        // 根据关卡模式设置滚动条和定时器
+        // 休闲模式不设置
         switch (this->GameMode)
         {
         case 0:
-        case 2:SetGameProgress(EASY);
+        case 2:
+            SetGameProgress(EASY);
             break;
-        case 3:SetGameProgress(MED);
+        case 3:
+            SetGameProgress(MED);
             break;
-        case 4:SetGameProgress(HARD);
+        case 4:
+            SetGameProgress(HARD);
             break;
-        default:break;
+        default:
+            break;
         }
     }
     else
@@ -257,9 +269,12 @@ void CGameDIg::OnClickedBtnStart()
     InvalidateRect(FALSE);
 }
 
-//暂停游戏按钮
+// 暂停游戏按钮
 void CGameDIg::OnClickedBtnStop()
 {
+    // 播放点击音效
+    PlayClickSound();
+
     if (playing)
     {
         this->GetDlgItem(IDC_BIN_STOP)->SetWindowText(L"重新开始");
@@ -272,29 +287,36 @@ void CGameDIg::OnClickedBtnStop()
     }
 }
 
-//提示按钮
+// 提示按钮
 void CGameDIg::OnClickedBtnPrompt()
 {
-    if (!playing) return;
+    // 播放点击音效
+    PlayClickSound();
+
+    if (!playing)
+        return;
     stack<Vertex> verList;
     bool success = m_GameC.GetPrompt(verList);
-    cout << "Success:" << success << endl;
     if (success)
     {
-        //重新加载地图背景，并更新最新地图
+        // 重新加载地图背景，并更新最新地图
         m_dcMem.BitBlt(0, 0, 800, 600, &m_dcBG, 0, 0, SRCCOPY);
         UpdateMap();
-        //画线
+        // 画线
         DrawTipFrame(m_GameC.helpFirst.row, m_GameC.helpFirst.col);
         DrawTipFrame(m_GameC.helpSecond.row, m_GameC.helpSecond.col);
         DrawTipLine(verList);
     }
 }
 
-//重排按钮
+// 重排按钮
 void CGameDIg::OnClickedBtnReset()
 {
-    if (!playing) return;
+    // 播放点击音效
+    PlayClickSound();
+
+    if (!playing)
+        return;
     m_GameC.ResetMap();
     firstSelect = true;
     m_dcMem.BitBlt(0, 0, 800, 600, &m_dcBG, 0, 0, SRCCOPY);
@@ -338,8 +360,18 @@ BOOL CGameDIg::OnInitDialog()
     // 设置游戏窗口按钮的初始状态
     SetButton(TRUE, FALSE, FALSE, FALSE);
 
+    // 保存按钮的初始位置
+    //SaveButtonPositions();
+
     // 初始化加载水果元素和掩码
     InitElement(ElementPath, MaskPath);
+
+    // 初始化音频系统
+    InitAudio();
+
+    // 播放背景音乐
+    PlayBackgroundMusic();
+
     return TRUE; // return TRUE unless you set the focus to a control
     // 异常: OCX 属性页应返回 FALSE
 }
@@ -378,7 +410,7 @@ void CGameDIg::DrawTipLine(stack<Vertex> verList)
 {
     CClientDC dc(this);
     CPen penLine(PS_SOLID, 2, RGB(0, 255, 0));
-    CPen* pOldPen = dc.SelectObject(&penLine);
+    CPen *pOldPen = dc.SelectObject(&penLine);
     Vertex vTop;
     CPoint cp;
     if (!verList.empty())
@@ -422,6 +454,9 @@ void CGameDIg::OnLButtonUp(UINT nFlags, CPoint point)
         return CDialogEx::OnLButtonUp(nFlags, point);
     }
 
+    // 播放点击图片音效
+    PlayClickPicSound();
+
     if (firstSelect)
     {
         // 如果是此次点击是第一个点，则画边框，并进行设置
@@ -438,8 +473,12 @@ void CGameDIg::OnLButtonUp(UINT nFlags, CPoint point)
         bool bSuc = m_GameC.Link(verList);
         if (bSuc)
         {
-            // 如果相连，则画连接线路，
+            // 如果相连，则画连接线路
             DrawTipLine(verList);
+
+            // 播放消除音效
+            PlayEliminateSound();
+
             // 重新加载地图背景，并更新最新地图
             m_dcMem.BitBlt(0, 0, 800, 600, &m_dcBG, 0, 0, SRCCOPY);
             UpdateMap();
@@ -461,14 +500,12 @@ void CGameDIg::OnLButtonUp(UINT nFlags, CPoint point)
     CDialogEx::OnLButtonUp(nFlags, point);
 }
 
-
-
 void CGameDIg::OnEnChangeEdit1()
 {
     // TODO:  如果该控件是 RICHEDIT 控件，它将不
     // 发送此通知，除非重写 CDialogEx::OnInitDialog()
     // 函数并调用 CRichEditCtrl().SetEventMask()，
-    // 同时将 ENM_CHANGE 标志“或”运算到掩码中。
+    // 同时将 ENM_CHANGE 标志"或"运算到掩码中。
 
     // TODO:  在此添加控件通知处理程序代码
 }
@@ -481,8 +518,6 @@ void CGameDIg::SetGameProgress(int range)
     TimeCount = range;
     this->SetTimer(1, 1000, NULL);
 }
-
-
 
 void CGameDIg::OnTimer(UINT_PTR nIDEvent)
 {
@@ -509,4 +544,123 @@ void CGameDIg::OnTimer(UINT_PTR nIDEvent)
         }
     }
     CDialogEx::OnTimer(nIDEvent);
+}
+
+// 音频相关函数实现
+BOOL CGameDIg::InitAudio()
+{
+    // 确保音频文件存在
+    WIN32_FIND_DATA findFileData;
+    HANDLE hFind;
+
+    // 检查背景音乐文件
+    hFind = FindFirstFile(m_strBGMusicPath, &findFileData);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        // 文件不存在，但不阻止程序运行
+        TRACE(_T("背景音乐文件不存在: %s\n"), m_strBGMusicPath);
+    }
+    else
+    {
+        FindClose(hFind);
+    }
+
+    // 检查点击音效文件
+    hFind = FindFirstFile(m_strClickSoundPath, &findFileData);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        TRACE(_T("点击音效文件不存在: %s\n"), m_strClickSoundPath);
+    }
+    else
+    {
+        FindClose(hFind);
+    }
+
+    // 检查点击图片音效文件
+    hFind = FindFirstFile(m_strClickPicSoundPath, &findFileData);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        TRACE(_T("点击图片音效文件不存在: %s\n"), m_strClickPicSoundPath);
+    }
+    else
+    {
+        FindClose(hFind);
+    }
+
+    // 检查消除音效文件
+    hFind = FindFirstFile(m_strEliminateSoundPath, &findFileData);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        TRACE(_T("消除音效文件不存在: %s\n"), m_strEliminateSoundPath);
+    }
+    else
+    {
+        FindClose(hFind);
+    }
+
+    return TRUE;
+}
+
+BOOL CGameDIg::PlayBackgroundMusic()
+{
+    // 如果已经在播放，先停止
+    if (m_bPlayingBGMusic)
+    {
+        StopBackgroundMusic();
+    }
+
+    // 使用MCI命令播放背景音乐(循环播放)
+    CString strCommand;
+    strCommand.Format(_T("open \"%s\" type mpegvideo alias BGMusic"), m_strBGMusicPath);
+
+    if (mciSendString(strCommand, NULL, 0, NULL) != 0)
+    {
+        TRACE(_T("播放背景音乐失败: %s\n"), m_strBGMusicPath);
+        return FALSE;
+    }
+
+    // 设置循环播放
+    mciSendString(_T("play BGMusic repeat"), NULL, 0, NULL);
+    m_bPlayingBGMusic = TRUE;
+
+    return TRUE;
+}
+
+BOOL CGameDIg::StopBackgroundMusic()
+{
+    if (m_bPlayingBGMusic)
+    {
+        mciSendString(_T("stop BGMusic"), NULL, 0, NULL);
+        mciSendString(_T("close BGMusic"), NULL, 0, NULL);
+        m_bPlayingBGMusic = FALSE;
+    }
+
+    return TRUE;
+}
+
+BOOL CGameDIg::PlayClickSound()
+{
+    // 使用PlaySound API播放WAV音效
+    PlaySound(m_strClickSoundPath, NULL, SND_FILENAME | SND_ASYNC);
+    return TRUE;
+}
+
+BOOL CGameDIg::PlayClickPicSound()
+{
+    // 使用PlaySound API播放WAV音效
+    PlaySound(m_strClickPicSoundPath, NULL, SND_FILENAME | SND_ASYNC);
+    return TRUE;
+}
+
+BOOL CGameDIg::PlayEliminateSound()
+{
+    // 使用PlaySound API播放WAV音效
+    PlaySound(m_strEliminateSoundPath, NULL, SND_FILENAME | SND_ASYNC);
+    return TRUE;
+}
+
+void CGameDIg::CleanupAudio()
+{
+    // 停止背景音乐
+    StopBackgroundMusic();
 }

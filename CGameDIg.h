@@ -2,6 +2,10 @@
 #include "afxdialogex.h"
 #include "CGameControl.h"
 
+// 添加MCI支持
+#include <mmsystem.h>
+#pragma comment(lib, "winmm.lib")
+
 // CGameDIg 对话框
 
 class CGameDIg : public CDialogEx
@@ -9,7 +13,7 @@ class CGameDIg : public CDialogEx
 	DECLARE_DYNAMIC(CGameDIg)
 
 public:
-	CGameDIg(CWnd* pParent = nullptr); // 标准构造函数
+	CGameDIg(CWnd *pParent = nullptr); // 标准构造函数
 	virtual ~CGameDIg();
 
 	// 对话框数据
@@ -26,14 +30,21 @@ private:
 	CRect m_GameRegion;		// 地图所在的矩形框
 	int GameMode;			// 标识游戏模式
 
+	// 音频相关成员变量
+	CString m_strBGMusicPath;		 // 背景音乐路径
+	CString m_strClickSoundPath;	 // 普通点击音效路径
+	CString m_strClickPicSoundPath;	 // 点击图片音效路径
+	CString m_strEliminateSoundPath; // 消除音效路径
+	BOOL m_bPlayingBGMusic;			 // 背景音乐播放状态
+
 	// 新增变量，用于处理缩放
 	float m_fScaleX;	 // X方向的缩放比例
 	float m_fScaleY;	 // Y方向的缩放比例
 	int m_nClientWidth;	 // 当前客户区宽度
 	int m_nClientHeight; // 当前客户区高度
 
-	CProgressCtrl GameProgress;		//创建一个滚动条对象
-	int TimeCount;					//创建一个时间量
+	CProgressCtrl GameProgress; // 创建一个滚动条对象
+	int TimeCount;				// 创建一个时间量
 
 	// 按钮原始位置和大小
 	struct ButtonInfo
@@ -44,7 +55,7 @@ private:
 	ButtonInfo m_ButtonInfos[4]; // 存储4个按钮的信息
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX); // DDX/DDV 支持
+	virtual void DoDataExchange(CDataExchange *pDX); // DDX/DDV 支持
 	HICON m_hIcon;									 // 系统图标
 	CDC m_dcMem;									 // 内存DC
 	CDC m_dcBG;										 // 背景
@@ -85,13 +96,20 @@ private:
 	void SaveButtonPositions(void);	  // 保存按钮原始位置
 	void UpdateButtonPositions(void); // 更新按钮位置
 
-	
 	void SetGameProgress(int range);
+
+	// 音频相关函数
+	BOOL InitAudio();			// 初始化音频系统
+	BOOL PlayBackgroundMusic(); // 播放背景音乐
+	BOOL StopBackgroundMusic(); // 停止背景音乐
+	BOOL PlayClickSound();		// 播放普通点击音效
+	BOOL PlayClickPicSound();	// 播放点击图片音效
+	BOOL PlayEliminateSound();	// 播放消除音效
+	void CleanupAudio();		// 清理音频资源
 
 public:
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point); // 鼠标左键松开事件
 	afx_msg void OnEnChangeEdit1();
-
 
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };
