@@ -95,6 +95,7 @@ private:
 	void UpdateGameRegion(void);	  // 新增更新游戏区域的函数
 	void SaveButtonPositions(void);	  // 保存按钮原始位置
 	void UpdateButtonPositions(void); // 更新按钮位置
+	void RefreshBackground(void);	  // 刷新背景方法
 
 	void SetGameProgress(int range);
 
@@ -110,6 +111,7 @@ private:
 public:
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point); // 鼠标左键松开事件
 	afx_msg void OnEnChangeEdit1();
+	afx_msg void OnBnClickedBtnSetting(); // 设置按钮点击事件
 
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };

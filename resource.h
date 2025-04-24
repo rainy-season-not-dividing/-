@@ -14,6 +14,7 @@
 #define IDB_BITMAP3                     135
 #define IDD_LEVEL_DIALOG                136
 #define IDB_LEVEL                       137
+#define IDD_SETTING_DIALOG              143
 #define IDC_BIN_BASIC                   1005
 #define IDC_BIN_RELAX                   1006
 #define IDC_BIN_LEVEL                   1007
@@ -29,14 +30,20 @@
 #define IDD_BTN_Easy                    1017
 #define IDD_BTN_Med                     1018
 #define IDD_BTN_Hard                    1019
+#define IDC_EDIT_ROW                    1020
+#define IDC_EDIT_COL                    1021
+#define IDC_EDIT_PIC                    1022
+#define IDC_COMBO_THEME                 1023
+#define IDC_RADIO_OPEN                  1024
+#define IDC_RADIO_CLOSE                 1025
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        143
+#define _APS_NEXT_RESOURCE_VALUE        145
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1019
+#define _APS_NEXT_CONTROL_VALUE         1026
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

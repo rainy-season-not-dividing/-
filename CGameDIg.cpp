@@ -1,4 +1,4 @@
-﻿﻿// CGameDIg.cpp: 实现文件
+﻿// CGameDIg.cpp: 实现文件
 
 #include "pch.h"
 #include <afxwin.h>
@@ -6,6 +6,8 @@
 #include "欢乐连连看.h"
 #include "afxdialogex.h"
 #include "CGameDIg.h"
+#include "ParamSetting.h"
+#include "CSettingDlg.h"
 
 // 正确定义类的静态成员变量
 CString CGameDIg::BGPath;
@@ -19,15 +21,18 @@ IMPLEMENT_DYNAMIC(CGameDIg, CDialogEx)
 CGameDIg::CGameDIg(CWnd *pParent /*=nullptr*/)
     : CDialogEx(IDD_GAME_DIALOG, pParent)
 {
+    // 确保ParamSetting已初始化
+    ParamSetting::GetInstance();
+
     // 资源路径
-    BGPath = _T("res/fruit_bg.bmp");
-    ElementPath = _T("res/fruit_element.bmp");
-    MaskPath = _T("res/fruit_mask.bmp");
+    BGPath = ParamSetting::BGPath;
+    ElementPath = ParamSetting::ElementPath;
+    MaskPath = ParamSetting::MaskPath;
 
     // 音频资源路径
-    m_strBGMusicPath = _T("sounds\\bgm.mp3");
-    m_strClickSoundPath = _T("sounds\\fruit_click.wav");
-    m_strClickPicSoundPath = _T("sounds\\fruit_clear.wav");
+    m_strBGMusicPath = ParamSetting::BGMSoundPath;
+    m_strClickSoundPath = ParamSetting::ClickSoundPath;
+    m_strClickPicSoundPath = ParamSetting::ClearSoundPath;
     m_strEliminateSoundPath = _T("sounds\\power.mp3");
     m_bPlayingBGMusic = FALSE;
 
@@ -38,8 +43,8 @@ CGameDIg::CGameDIg(CWnd *pParent /*=nullptr*/)
 
     m_GameRegion.top = MAP_TOP;
     m_GameRegion.left = MAP_LEFT;
-    m_GameRegion.right = MAP_LEFT + PIC_WIDTH * Cols;
-    m_GameRegion.bottom = MAP_TOP + PIC_HEIGHT * Rows;
+    m_GameRegion.right = MAP_LEFT + PIC_WIDTH * ParamSetting::GetMapCol();
+    m_GameRegion.bottom = MAP_TOP + PIC_HEIGHT * ParamSetting::GetMapRow();
 
     playing = false;
     firstSelect = false;
@@ -64,6 +69,7 @@ ON_BN_CLICKED(IDC_BIN_START, &CGameDIg::OnClickedBtnStart)
 ON_BN_CLICKED(IDC_BIN_STOP, &CGameDIg::OnClickedBtnStop)
 ON_BN_CLICKED(IDC_BIN_PROMPT, &CGameDIg::OnClickedBtnPrompt)
 ON_BN_CLICKED(IDC_BIN_RESET, &CGameDIg::OnClickedBtnReset)
+ON_BN_CLICKED(IDC_BIN_SETTING, &CGameDIg::OnBnClickedBtnSetting)
 ON_WM_LBUTTONUP()
 ON_EN_CHANGE(IDC_EDIT_TIME, &CGameDIg::OnEnChangeEdit1)
 
@@ -85,6 +91,14 @@ void CGameDIg::InitBackground(void)
         AfxMessageBox(errorMsg);
         return;
     }
+
+    // 获取位图信息
+    BITMAP bmp;
+    CBitmap *pBitmap = CBitmap::FromHandle((HBITMAP)Backbmp);
+    pBitmap->GetBitmap(&bmp);
+    int origWidth = bmp.bmWidth;
+    int origHeight = bmp.bmHeight;
+
     CClientDC dc(this);
     if (!m_dcBG.CreateCompatibleDC(&dc))
     {
@@ -109,13 +123,7 @@ void CGameDIg::InitBackground(void)
         AfxMessageBox(_T("Background bitmap handle is NULL."));
         return;
     }
-    if (pOldBitmap == NULL)
-    {
-        AfxMessageBox(_T("Failed to select background bitmap into DC."));
-        ::DeleteObject(Backbmp);
-        m_dcBG.DeleteDC();
-        return;
-    }
+
     // 加载内存
     if (!m_dcMem.CreateCompatibleDC(&dc))
     {
@@ -125,8 +133,9 @@ void CGameDIg::InitBackground(void)
         ::DeleteObject(Backbmp);
         return;
     }
+
     CBitmap bmpMem;
-    if (!bmpMem.CreateCompatibleBitmap(&dc, 800, 600))
+    if (!bmpMem.CreateCompatibleBitmap(&dc, GAMEWND_WIDTH, GAMEWND_HEIGHT))
     {
         AfxMessageBox(_T("Failed to create compatible bitmap for memory DC."));
         m_dcMem.DeleteDC();
@@ -135,6 +144,7 @@ void CGameDIg::InitBackground(void)
         ::DeleteObject(Backbmp);
         return;
     }
+
     if (m_dcMem.SelectObject(&bmpMem) == NULL)
     {
         AfxMessageBox(_T("Failed to select bitmap into memory DC."));
@@ -145,9 +155,11 @@ void CGameDIg::InitBackground(void)
         ::DeleteObject(Backbmp);
         return;
     }
-    if (!m_dcMem.BitBlt(0, 0, 800, 600, &m_dcBG, 0, 0, SRCCOPY))
+
+    // 使用StretchBlt拉伸背景图片以填充整个窗口
+    if (!m_dcMem.StretchBlt(0, 0, GAMEWND_WIDTH, GAMEWND_HEIGHT, &m_dcBG, 0, 0, origWidth, origHeight, SRCCOPY))
     {
-        AfxMessageBox(_T("Failed to copy background to memory DC."));
+        AfxMessageBox(_T("Failed to stretch background to memory DC."));
         bmpMem.DeleteObject();
         m_dcMem.DeleteDC();
         m_dcBG.SelectObject(pOldBitmap);
@@ -155,6 +167,7 @@ void CGameDIg::InitBackground(void)
         ::DeleteObject(Backbmp);
         return;
     }
+
     // 处理窗口
     CRect rtWin;
     CRect rtClient;
@@ -162,13 +175,12 @@ void CGameDIg::InitBackground(void)
     this->GetClientRect(rtClient);
     int nSpanWidth = rtWin.Width() - rtClient.Width();
     int nSpanHeight = rtWin.Height() - rtClient.Height();
-    MoveWindow(0, 0, 800 + nSpanWidth, 600 + nSpanHeight);
+    MoveWindow(0, 0, GAMEWND_WIDTH + nSpanWidth, GAMEWND_HEIGHT + nSpanHeight);
     CenterWindow();
 }
 
 void CGameDIg::OnPaint()
 {
-
     if (IsWindowVisible() && IsWindowEnabled())
     {
         CPaintDC dc(this);
@@ -178,8 +190,8 @@ void CGameDIg::OnPaint()
             AfxMessageBox(_T("内存 DC 无效"));
             return;
         }
-        // 执行 BitBlt 操作
-        if (!dc.BitBlt(0, 0, 800, 600, &m_dcMem, 0, 0, SRCCOPY))
+        // 执行 BitBlt 操作，不用修改为StretchBlt，因为m_dcMem已经是拉伸后的大小
+        if (!dc.BitBlt(0, 0, GAMEWND_WIDTH, GAMEWND_HEIGHT, &m_dcMem, 0, 0, SRCCOPY))
         {
             AfxMessageBox(_T("Failed to copy memory DC to screen DC."));
         }
@@ -190,14 +202,6 @@ void CGameDIg::OnPaint()
         TRACE(_T("窗口不可见或不可用，无法进行 DC 复制操作\n"));
         return;
     }
-
-    /*
-     CPaintDC dc(this); // device context for painting
-    // 执行 BitBlt 操作
-    if (!dc.BitBlt(0, 0, 800, 600, &m_dcMem, 0, 0, SRCCOPY)) {
-        AfxMessageBox(_T("Failed to copy memory DC to screen DC."));
-    }
-    */
 }
 
 void CGameDIg::SetGameMode(int mode)
@@ -234,7 +238,7 @@ void CGameDIg::OnClickedBtnStart()
     PlayClickSound();
 
     // 初始化地图，地图用一个二维数组保存
-    bool status = m_GameC.StartGame(Rows, Cols, PicNum);
+    bool status = m_GameC.StartGame(ParamSetting::GetMapRow(), ParamSetting::GetMapCol(), ParamSetting::GetPicCount());
     if (status) // 初始化地图成功
     {
         // 设置状态
@@ -300,7 +304,7 @@ void CGameDIg::OnClickedBtnPrompt()
     if (success)
     {
         // 重新加载地图背景，并更新最新地图
-        m_dcMem.BitBlt(0, 0, 800, 600, &m_dcBG, 0, 0, SRCCOPY);
+        RefreshBackground();
         UpdateMap();
         // 画线
         DrawTipFrame(m_GameC.helpFirst.row, m_GameC.helpFirst.col);
@@ -319,7 +323,7 @@ void CGameDIg::OnClickedBtnReset()
         return;
     m_GameC.ResetMap();
     firstSelect = true;
-    m_dcMem.BitBlt(0, 0, 800, 600, &m_dcBG, 0, 0, SRCCOPY);
+    RefreshBackground();
     UpdateMap();
     InvalidateRect(FALSE);
 }
@@ -361,7 +365,7 @@ BOOL CGameDIg::OnInitDialog()
     SetButton(TRUE, FALSE, FALSE, FALSE);
 
     // 保存按钮的初始位置
-    //SaveButtonPositions();
+    // SaveButtonPositions();
 
     // 初始化加载水果元素和掩码
     InitElement(ElementPath, MaskPath);
@@ -383,9 +387,13 @@ void CGameDIg::UpdateMap()
     int nLeft = MAP_LEFT;
     int nElemW = PIC_WIDTH;
     int nElemH = PIC_HEIGHT;
-    for (int i = 0; i < Rows; i++)
+
+    int rows = ParamSetting::GetMapRow();
+    int cols = ParamSetting::GetMapCol();
+
+    for (int i = 0; i < rows; i++)
     {
-        for (int j = 0; j < Cols; j++)
+        for (int j = 0; j < cols; j++)
         {
             int nElemVal = m_GameC.GetElement(i, j);
             m_dcMem.BitBlt(nLeft + j * nElemW, nTop + i * nElemH, nElemW, nElemH, &m_dcMask, 0, nElemVal * nElemH, SRCPAINT);
@@ -444,7 +452,11 @@ void CGameDIg::OnLButtonUp(UINT nFlags, CPoint point)
     // 计算当前点的坐标
     int nRow = (point.y - m_GameRegionTop.y) / m_sizeElem.cy;
     int nCol = (point.x - m_GameRegionTop.x) / m_sizeElem.cx;
-    if (nRow > Rows - 1 || nCol > Cols - 1)
+
+    int rows = ParamSetting::GetMapRow();
+    int cols = ParamSetting::GetMapCol();
+
+    if (nRow > rows - 1 || nCol > cols - 1)
     {
         return CDialogEx::OnLButtonUp(nFlags, point);
     }
@@ -480,7 +492,7 @@ void CGameDIg::OnLButtonUp(UINT nFlags, CPoint point)
             PlayEliminateSound();
 
             // 重新加载地图背景，并更新最新地图
-            m_dcMem.BitBlt(0, 0, 800, 600, &m_dcBG, 0, 0, SRCCOPY);
+            RefreshBackground();
             UpdateMap();
         }
         Sleep(200);
@@ -535,7 +547,7 @@ void CGameDIg::OnTimer(UINT_PTR nIDEvent)
         {
             KillTimer(1);
             m_GameC.ClearMap();
-            m_dcMem.BitBlt(0, 0, 800, 600, &m_dcBG, 0, 0, SRCCOPY);
+            RefreshBackground();
             UpdateMap();
             InvalidateRect(FALSE);
             MessageBox(TEXT("时间到！游戏失败！"));
@@ -663,4 +675,95 @@ void CGameDIg::CleanupAudio()
 {
     // 停止背景音乐
     StopBackgroundMusic();
+}
+
+// 添加一个方法，用于刷新背景
+void CGameDIg::RefreshBackground()
+{
+    // 获取位图信息
+    BITMAP bmp;
+    HBITMAP hBmp = (HBITMAP)::GetCurrentObject(m_dcBG.GetSafeHdc(), OBJ_BITMAP);
+    CBitmap *pBitmap = CBitmap::FromHandle(hBmp);
+    pBitmap->GetBitmap(&bmp);
+    int origWidth = bmp.bmWidth;
+    int origHeight = bmp.bmHeight;
+
+    // 使用StretchBlt拉伸背景图片以填充整个窗口
+    m_dcMem.StretchBlt(0, 0, GAMEWND_WIDTH, GAMEWND_HEIGHT, &m_dcBG, 0, 0, origWidth, origHeight, SRCCOPY);
+}
+
+// 设置按钮点击事件
+void CGameDIg::OnBnClickedBtnSetting()
+{
+    // 播放点击音效
+    PlayClickSound();
+
+    // 创建设置对话框
+    CGameSettingDlg dlg;
+
+    // 设置初始值 - 使用ParamSetting类
+    dlg.SetMapRows(ParamSetting::GetMapRow());
+    dlg.SetMapCols(ParamSetting::GetMapCol());
+    dlg.SetPicCount(ParamSetting::GetPicCount());
+    dlg.SetThemeIndex(ParamSetting::ThemeNo);
+    dlg.SetBGMusicOn(ParamSetting::BGMusicOn);
+
+    // 显示对话框
+    if (dlg.DoModal() == IDOK)
+    {
+        // 应用新的设置
+
+        // 获取游戏当前状态
+        bool wasPlaying = playing;
+
+        // 如果正在游戏，先暂停
+        if (wasPlaying)
+        {
+            // 暂停游戏
+            playing = false;
+            KillTimer(1);
+        }
+
+        // 更新BGPath、ElementPath和MaskPath
+        BGPath = ParamSetting::BGPath;
+        ElementPath = ParamSetting::ElementPath;
+        MaskPath = ParamSetting::MaskPath;
+
+        // 更新音频路径
+        m_strBGMusicPath = ParamSetting::BGMSoundPath;
+        m_strClickSoundPath = ParamSetting::ClickSoundPath;
+        m_strClickPicSoundPath = ParamSetting::ClearSoundPath;
+
+        // 重新初始化背景和元素
+        InitBackground();
+        InitElement(ElementPath, MaskPath);
+
+        // 更新游戏区域
+        m_GameRegion.right = MAP_LEFT + PIC_WIDTH * ParamSetting::GetMapCol();
+        m_GameRegion.bottom = MAP_TOP + PIC_HEIGHT * ParamSetting::GetMapRow();
+
+        // 处理背景音乐
+        if (ParamSetting::BGMusicOn)
+        {
+            if (!m_bPlayingBGMusic)
+                PlayBackgroundMusic();
+        }
+        else
+        {
+            if (m_bPlayingBGMusic)
+                StopBackgroundMusic();
+        }
+
+        // 如果之前在游戏中，重新开始游戏
+        if (wasPlaying)
+        {
+            // 重新开始游戏
+            OnClickedBtnStart();
+        }
+        else
+        {
+            // 刷新界面
+            InvalidateRect(NULL, TRUE);
+        }
+    }
 }
