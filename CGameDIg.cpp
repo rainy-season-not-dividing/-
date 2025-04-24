@@ -237,9 +237,18 @@ void CGameDIg::OnClickedBtnStart()
         SetButton(FALSE, TRUE, TRUE, TRUE);
         UpdateMap(); // 展示地图信息
 
-        // 如果不是体闲模式，则设置滚动条和定时器
-        if (this->GameMode != 1) {
-            SetGameProgress(PROGRESS);
+        //根据关卡模式设置滚动条和定时器
+        //休闲模式不设置
+        switch (this->GameMode)
+        {
+        case 0:
+        case 2:SetGameProgress(EASY);
+            break;
+        case 3:SetGameProgress(MED);
+            break;
+        case 4:SetGameProgress(HARD);
+            break;
+        default:break;
         }
     }
     else

@@ -21,5 +21,10 @@ typedef struct tagVertex
 #define PicNum 4           // 图片的个数
 #define BLANK -1           // 地图没有图片
 #define PROGRESS 100
+#define EASY 300
+#define MED 200
+#define HARD 100
+
+
 
 #endif // GLOBAL_H

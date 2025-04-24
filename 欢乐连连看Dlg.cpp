@@ -7,15 +7,14 @@
 #include "欢乐连连看Dlg.h"
 #include "afxdialogex.h"
 #include "Resource.h"
-#include"CGameDIg.h"
-
+#include "CGameDIg.h"
+#include "CGameLevelDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
-
-// 用于应用程序“关于”菜单项的 CAboutDlg 对话框
+// 用于应用程序"关于"菜单项的 CAboutDlg 对话框
 
 class CAboutDlg : public CDialogEx
 {
@@ -24,11 +23,14 @@ public:
 
 	// 对话框数据
 #ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_ABOUTBOX };
+	enum
+	{
+		IDD = IDD_ABOUTBOX
+	};
 #endif
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
+	virtual void DoDataExchange(CDataExchange *pDX); // DDX/DDV 支持
 
 	// 实现
 protected:
@@ -39,7 +41,7 @@ CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
 {
 }
 
-void CAboutDlg::DoDataExchange(CDataExchange* pDX)
+void CAboutDlg::DoDataExchange(CDataExchange *pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 }
@@ -47,37 +49,30 @@ void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
 END_MESSAGE_MAP()
 
-
 // C欢乐连连看Dlg 对话框
 
-
-
-C欢乐连连看Dlg::C欢乐连连看Dlg(CWnd* pParent /*=nullptr*/)
+C欢乐连连看Dlg::C欢乐连连看Dlg(CWnd *pParent /*=nullptr*/)
 	: CDialogEx(IDD_MY_DIALOG, pParent)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
-void C欢乐连连看Dlg::DoDataExchange(CDataExchange* pDX)
+void C欢乐连连看Dlg::DoDataExchange(CDataExchange *pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 }
 
-
 BEGIN_MESSAGE_MAP(C欢乐连连看Dlg, CDialogEx)
-	ON_WM_SYSCOMMAND()
-	ON_WM_PAINT()
-	ON_WM_QUERYDRAGICON()
-	ON_BN_CLICKED(IDC_BIN_BASIC, &C欢乐连连看Dlg::OnBnClickedBinBasic)
-	ON_BN_CLICKED(IDC_BIN_RELAX, &C欢乐连连看Dlg::OnBnClickedBinRelax)
-	ON_BN_CLICKED(IDC_BIN_LEVEL, &C欢乐连连看Dlg::OnBnClickedBinLevel)
-	ON_BN_CLICKED(IDC_BIN_RANK, &C欢乐连连看Dlg::OnBnClickedBinRank)
-	ON_BN_CLICKED(IDC_BIN_SETTING, &C欢乐连连看Dlg::OnBnClickedBinSetting)
-	ON_BN_CLICKED(IDC_BIN_HELP, &C欢乐连连看Dlg::OnBnClickedBinHelp)
+ON_WM_SYSCOMMAND()
+ON_WM_PAINT()
+ON_WM_QUERYDRAGICON()
+ON_BN_CLICKED(IDC_BIN_BASIC, &C欢乐连连看Dlg::OnBnClickedBinBasic)
+ON_BN_CLICKED(IDC_BIN_RELAX, &C欢乐连连看Dlg::OnBnClickedBinRelax)
+ON_BN_CLICKED(IDC_BIN_LEVEL, &C欢乐连连看Dlg::OnBnClickedBinLevel)
+ON_BN_CLICKED(IDC_BIN_RANK, &C欢乐连连看Dlg::OnBnClickedBinRank)
+ON_BN_CLICKED(IDC_BIN_SETTING, &C欢乐连连看Dlg::OnBnClickedBinSetting)
+ON_BN_CLICKED(IDC_BIN_HELP, &C欢乐连连看Dlg::OnBnClickedBinHelp)
 END_MESSAGE_MAP()
-
-
-
 
 // C欢乐连连看Dlg 消息处理程序
 
@@ -85,13 +80,13 @@ BOOL C欢乐连连看Dlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
-	// 将“关于...”菜单项添加到系统菜单中。
+	// 将"关于..."菜单项添加到系统菜单中。
 
 	// IDM_ABOUTBOX 必须在系统命令范围内。
 	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
 	ASSERT(IDM_ABOUTBOX < 0xF000);
 
-	CMenu* pSysMenu = GetSystemMenu(FALSE);
+	CMenu *pSysMenu = GetSystemMenu(FALSE);
 	if (pSysMenu != nullptr)
 	{
 		BOOL bNameValid;
@@ -107,15 +102,15 @@ BOOL C欢乐连连看Dlg::OnInitDialog()
 
 	// 设置此对话框的图标。  当应用程序主窗口不是对话框时，框架将自动
 	//  执行此操作
-	SetIcon(m_hIcon, TRUE);			// 设置大图标
-	SetIcon(m_hIcon, FALSE);		// 设置小图标
+	SetIcon(m_hIcon, TRUE);	 // 设置大图标
+	SetIcon(m_hIcon, FALSE); // 设置小图标
 
 	// 初始化窗口背景
 	InitBackground();
 
 	// TODO: 在此添加额外的初始化代码
 
-	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
+	return TRUE; // 除非将焦点设置到控件，否则返回 TRUE
 }
 
 void C欢乐连连看Dlg::OnSysCommand(UINT nID, LPARAM lParam)
@@ -161,8 +156,8 @@ void C欢乐连连看Dlg::OnPaint()
 	}
 }
 
-//当用户拖动最小化窗口时系统调用此函数取得光标
-//显示。
+// 当用户拖动最小化窗口时系统调用此函数取得光标
+// 显示。
 HCURSOR C欢乐连连看Dlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
@@ -206,8 +201,6 @@ void C欢乐连连看Dlg::OnBnClickedBinBasic()
 
 	// 展示主界面
 	this->ShowWindow(SW_SHOW);
-
-
 }
 
 // 体闲模式按钮
@@ -229,14 +222,12 @@ void C欢乐连连看Dlg::OnBnClickedBinRelax()
 // 关卡模式按钮
 void C欢乐连连看Dlg::OnBnClickedBinLevel()
 {
-	// TODO: 在此添加控件通知处理程序代码
-	// TODO: 在此添加控件通知处理程序代码
+	// 隐藏主界面
 	this->ShowWindow(SW_HIDE);
 
-	// 显示游戏界面，模拟显示
-	CGameDIg dlg;
-	dlg.SetGameMode(2);
-	dlg.DoModal();
+	// 创建并显示关卡选择对话框
+	CGameLevelDlg levelDlg;
+	levelDlg.DoModal();
 
 	// 展示主界面
 	this->ShowWindow(SW_SHOW);

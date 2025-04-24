@@ -12,6 +12,8 @@
 #define IDB_BITMAP1                     133
 #define IDB_BITMAP2                     134
 #define IDB_BITMAP3                     135
+#define IDD_LEVEL_DIALOG                136
+#define IDB_LEVEL                       137
 #define IDC_BIN_BASIC                   1005
 #define IDC_BIN_RELAX                   1006
 #define IDC_BIN_LEVEL                   1007
@@ -24,14 +26,17 @@
 #define IDC_BIN_PROMPT                  1014
 #define IDC_BIN_RESET                   1015
 #define IDC_EDIT_TIME                   1016
+#define IDD_BTN_Easy                    1017
+#define IDD_BTN_Med                     1018
+#define IDD_BTN_Hard                    1019
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        136
+#define _APS_NEXT_RESOURCE_VALUE        143
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1016
+#define _APS_NEXT_CONTROL_VALUE         1019
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
