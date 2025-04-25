@@ -6,13 +6,13 @@
 ParamSetting *ParamSetting::instance = nullptr;
 
 // 静态变量初始化
-CString ParamSetting::BGPath = _T("theme/picture/fruit_bg.bmp");
-CString ParamSetting::ElementPath = _T("theme/picture/fruit_element.bmp");
-CString ParamSetting::MaskPath = _T("theme/picture/fruit_mask.bmp");
+CString ParamSetting::BGPath = _T("res/fruit_bg.bmp");
+CString ParamSetting::ElementPath = _T("res/fruit_element.bmp");
+CString ParamSetting::MaskPath = _T("res/fruit_mask.bmp");
 
-CString ParamSetting::ClickSoundPath = _T("theme/sound/fruit_click.wav");
-CString ParamSetting::ClearSoundPath = _T("theme/sound/fruit_clear.wav");
-CString ParamSetting::BGMSoundPath = _T("theme/sound/bgm.mp3");
+CString ParamSetting::ClickSoundPath = _T("sounds/fruit_click.wav");
+CString ParamSetting::ClearSoundPath = _T("sounds/fruit_clear.wav");
+CString ParamSetting::BGMSoundPath = _T("sounds/bgm.mp3");
 
 // 使用全局作用域的宏值初始化
 

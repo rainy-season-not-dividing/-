@@ -9,6 +9,8 @@
 #include "Resource.h"
 #include "CGameDIg.h"
 #include "CGameLevelDlg.h"
+#include "ParamSetting.h"
+#include "CGameSettingDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -242,7 +244,22 @@ void C欢乐连连看Dlg::OnBnClickedBinRank()
 // 设置按钮
 void C欢乐连连看Dlg::OnBnClickedBinSetting()
 {
-	// TODO: 在此添加控件通知处理程序代码
+	// 创建设置对话框
+	CGameSettingDlg dlg;
+
+	// 设置初始值
+	dlg.SetMapRows(ParamSetting::GetMapRow());
+	dlg.SetMapCols(ParamSetting::GetMapCol());
+	dlg.SetPicCount(ParamSetting::GetPicCount());
+	dlg.SetThemeIndex(ParamSetting::ThemeNo);
+	dlg.SetBGMusicOn(ParamSetting::BGMusicOn);
+
+	// 显示对话框
+	if (dlg.DoModal() == IDOK)
+	{
+		// 显示设置已更新的提示
+		MessageBox(_T("设置已更新，将在下次游戏中生效！"), _T("提示"), MB_OK | MB_ICONINFORMATION);
+	}
 }
 
 // 帮助按钮

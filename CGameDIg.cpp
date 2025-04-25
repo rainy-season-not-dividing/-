@@ -69,7 +69,7 @@ ON_BN_CLICKED(IDC_BIN_START, &CGameDIg::OnClickedBtnStart)
 ON_BN_CLICKED(IDC_BIN_STOP, &CGameDIg::OnClickedBtnStop)
 ON_BN_CLICKED(IDC_BIN_PROMPT, &CGameDIg::OnClickedBtnPrompt)
 ON_BN_CLICKED(IDC_BIN_RESET, &CGameDIg::OnClickedBtnReset)
-ON_BN_CLICKED(IDC_BIN_SETTING, &CGameDIg::OnBnClickedBtnSetting)
+ON_BN_CLICKED(IDC_BIN_SETTING, &CGameDIg::OnBnClickedBinSetting)
 ON_WM_LBUTTONUP()
 ON_EN_CHANGE(IDC_EDIT_TIME, &CGameDIg::OnEnChangeEdit1)
 
@@ -234,6 +234,9 @@ void CGameDIg::InitMode(int mode)
 // 开始游戏按钮
 void CGameDIg::OnClickedBtnStart()
 {
+    // 先确保所有定时器已停止
+    KillTimer(1);
+
     // 播放点击音效
     PlayClickSound();
 
@@ -241,36 +244,45 @@ void CGameDIg::OnClickedBtnStart()
     bool status = m_GameC.StartGame(ParamSetting::GetMapRow(), ParamSetting::GetMapCol(), ParamSetting::GetPicCount());
     if (status) // 初始化地图成功
     {
+        // 清除旧的界面元素
+        RefreshBackground();
+        
         // 设置状态
         playing = true;
         firstSelect = true;
 
-        // 设置按钮
+        // 设置按钮 - 开始按钮禁用，其他按钮启用
         SetButton(FALSE, TRUE, TRUE, TRUE);
-        UpdateMap(); // 展示地图信息
+        
+        // 展示地图信息
+        UpdateMap();
 
         // 根据关卡模式设置滚动条和定时器
-        // 休闲模式不设置
         switch (this->GameMode)
         {
-        case 0:
-        case 2:
+        case 0: // 休闲模式
+        case 2: // 简单模式
             SetGameProgress(EASY);
             break;
-        case 3:
+        case 3: // 中等难度
             SetGameProgress(MED);
             break;
-        case 4:
+        case 4: // 困难模式
             SetGameProgress(HARD);
             break;
         default:
+            SetGameProgress(EASY);
             break;
         }
+        
+        // 更新界面
+        InvalidateRect(NULL, TRUE);
     }
     else
-        AfxMessageBox(L"行列和图片个数不匹配，无法绘制地图！", MB_OKCANCEL);
-
-    InvalidateRect(FALSE);
+    {
+        // 初始化失败，显示错误消息
+        MessageBox(_T("行列和图片个数不匹配，无法绘制地图！"), _T("初始化失败"), MB_OK | MB_ICONWARNING);
+    }
 }
 
 // 暂停游戏按钮
@@ -452,10 +464,10 @@ void CGameDIg::OnLButtonUp(UINT nFlags, CPoint point)
     // 计算当前点的坐标
     int nRow = (point.y - m_GameRegionTop.y) / m_sizeElem.cy;
     int nCol = (point.x - m_GameRegionTop.x) / m_sizeElem.cx;
-
+    
     int rows = ParamSetting::GetMapRow();
     int cols = ParamSetting::GetMapCol();
-
+    
     if (nRow > rows - 1 || nCol > cols - 1)
     {
         return CDialogEx::OnLButtonUp(nFlags, point);
@@ -494,21 +506,47 @@ void CGameDIg::OnLButtonUp(UINT nFlags, CPoint point)
             // 重新加载地图背景，并更新最新地图
             RefreshBackground();
             UpdateMap();
+            
+            // 检查游戏是否获胜
+            bool isWin = m_GameC.isWin();
+            
+            // 调试输出
+            TRACE(_T("游戏胜利状态: %d\n"), isWin ? 1 : 0);
+            
+            // 如果游戏胜利
+            if (isWin)
+            {
+                // 停止定时器
+                KillTimer(1);
+                
+                // 设置按钮状态 - 只允许开始按钮可用
+                SetButton(TRUE, FALSE, FALSE, FALSE);
+                
+                // 设置游戏状态为非进行中
+                playing = false;
+                
+                // 更新界面，确保所有变化都已显示
+                InvalidateRect(NULL, TRUE);
+                UpdateWindow();
+                
+                // 显示胜利消息
+                MessageBox(_T("恭喜你！获胜！"), _T("游戏胜利"), MB_OK | MB_ICONINFORMATION);
+                
+                // 确保消息框之后UI正确刷新
+                return;
+            }
         }
+        
+        // 等待200毫秒，让玩家能看清连线
         Sleep(200);
+        
+        // 刷新屏幕
         InvalidateRect(FALSE);
-        if (bSuc && m_GameC.isWin())
-        {
-            // 设置按钮
-            SetButton(TRUE, FALSE, FALSE, FALSE);
-            playing = false;
-
-            // 确保界面已完全更新后再显示消息框
-            UpdateWindow();
-            MessageBox(TEXT("恭喜你！获胜！"));
-        }
     }
-    firstSelect = !firstSelect; // 第一次和第二次点击切换标志
+    
+    // 切换第一次和第二次点击的标志
+    firstSelect = !firstSelect;
+    
     CDialogEx::OnLButtonUp(nFlags, point);
 }
 
@@ -533,28 +571,56 @@ void CGameDIg::SetGameProgress(int range)
 
 void CGameDIg::OnTimer(UINT_PTR nIDEvent)
 {
-    // TODO: 在此添加消息处理程序代码和/或调用默认值
-    if (playing)
+    // 只处理定时器1的事件
+    if (nIDEvent != 1) 
     {
-        CString str;
-        str.Format(_T("%d"), TimeCount - 1);
-        SetDlgItemText(IDC_EDIT_TIME, str);
-        UpdateData(false);
-        TimeCount--;
-        GameProgress.StepIt();
-
-        if (TimeCount == 0)
-        {
-            KillTimer(1);
-            m_GameC.ClearMap();
-            RefreshBackground();
-            UpdateMap();
-            InvalidateRect(FALSE);
-            MessageBox(TEXT("时间到！游戏失败！"));
-            SetButton(TRUE, FALSE, FALSE, FALSE);
-            playing = false;
-        }
+        CDialogEx::OnTimer(nIDEvent);
+        return;
     }
+    
+    // 如果游戏不在进行中，停止定时器并返回
+    if (!playing)
+    {
+        KillTimer(1);
+        CDialogEx::OnTimer(nIDEvent);
+        return;
+    }
+    
+    // 更新时间显示
+    CString str;
+    str.Format(_T("%d"), TimeCount - 1);
+    SetDlgItemText(IDC_EDIT_TIME, str);
+    UpdateData(false);
+    
+    // 递减时间计数
+    TimeCount--;
+    GameProgress.StepIt();
+
+    // 如果时间到
+    if (TimeCount == 0)
+    {
+        // 停止定时器
+        KillTimer(1);
+        
+        // 清空地图
+        m_GameC.ClearMap();
+        RefreshBackground();
+        UpdateMap();
+        
+        // 刷新界面
+        InvalidateRect(NULL, TRUE);
+        UpdateWindow();
+        
+        // 显示失败消息
+        MessageBox(_T("时间到！游戏失败！"), _T("游戏结束"), MB_OK | MB_ICONINFORMATION);
+        
+        // 设置按钮状态 - 只允许开始按钮可用
+        SetButton(TRUE, FALSE, FALSE, FALSE);
+        
+        // 设置游戏状态为非进行中
+        playing = false;
+    }
+    
     CDialogEx::OnTimer(nIDEvent);
 }
 
@@ -693,8 +759,11 @@ void CGameDIg::RefreshBackground()
 }
 
 // 设置按钮点击事件
-void CGameDIg::OnBnClickedBtnSetting()
+void CGameDIg::OnBnClickedBinSetting()
 {
+    // 添加测试消息框
+    MessageBox(_T("设置按钮被点击！"), _T("调试信息"), MB_OK);
+
     // 播放点击音效
     PlayClickSound();
 

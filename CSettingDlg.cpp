@@ -60,9 +60,12 @@ BOOL CGameSettingDlg::OnInitDialog()
 	m_editPicCount.SetWindowText(strValue);
 
 	// 添加主题选项
+	m_comboTheme.AddString(_T("卡通主题"));
 	m_comboTheme.AddString(_T("水果主题"));
 	m_comboTheme.AddString(_T("动物主题"));
-	m_comboTheme.AddString(_T("卡通主题"));
+	
+	
+	
 
 	// 设置当前选中的主题
 	m_comboTheme.SetCurSel(m_nThemeIndex);
@@ -151,33 +154,40 @@ void CGameSettingDlg::OnBnClickedOk()
 	ParamSetting::ThemeNo = m_nThemeIndex;
 	ParamSetting::BGMusicOn = m_bBGMusicOn;
 
-	// 根据主题设置资源路径
+	// 根据主题设置资源路径 - 确保路径格式正确且与CGameDIg中使用的路径一致
 	switch (m_nThemeIndex)
 	{
-	case 0: // 水果主题
-		
-		ParamSetting::BGPath = _T("res/fruit_bg.bmp");
-		ParamSetting::ElementPath = _T("res/fruit_element.bmp");
-		ParamSetting::MaskPath = _T("res/fruit_mask.bmp");
-		ParamSetting::ClickSoundPath = _T("sounds/fruit_click.wav");
-		ParamSetting::ClearSoundPath = _T("sounds/fruit_clear.wav");
-		//ParamSetting::BGMSoundPath = _T("sounds/bgm.mp3");
+	case 2: // 水果主题 - 修正注释
+		ParamSetting::BGPath = _T("res\\fruit_bg.bmp");          // 水果主题背景
+		ParamSetting::ElementPath = _T("res\\fruit_element.bmp"); // 水果主题元素
+		ParamSetting::MaskPath = _T("res\\fruit_mask.bmp");       // 水果主题掩码
+		ParamSetting::ClickSoundPath = _T("sounds\\fruit_click.wav");
+		ParamSetting::ClearSoundPath = _T("sounds\\fruit_clear.wav");
+		ParamSetting::BGMSoundPath = _T("sounds\\bgm.mp3");
 		break;
-	case 1: // 动物主题
-		ParamSetting::BGPath = _T("res/cxk_bg.bmp");
-		ParamSetting::ElementPath = _T("res/cxk_element.bmp");
-		ParamSetting::MaskPath = _T("res/cxk_mask.bmp");
-		ParamSetting::ClickSoundPath = _T("sounds/cxk_click.wav");
-		ParamSetting::ClearSoundPath = _T("sounds/cxk_clear.wav");
+	case 1: // 动物主题 - 修正注释
+		ParamSetting::BGPath = _T("res\\cxk_bg.bmp");           // 动物主题背景
+		ParamSetting::ElementPath = _T("res\\cxk_element.bmp"); // 动物主题元素
+		ParamSetting::MaskPath = _T("res\\cxk_mask.bmp");       // 动物主题掩码
+		ParamSetting::ClickSoundPath = _T("sounds\\cxk_click.wav");
+		ParamSetting::ClearSoundPath = _T("sounds\\cxk_clear.wav");
+		ParamSetting::BGMSoundPath = _T("sounds\\bgm.mp3");
 		break;
-	case 2: // 卡通主题
-		ParamSetting::BGPath = _T("res/mh_bg.bmp");
-		ParamSetting::ElementPath = _T("res/mh_element.bmp");
-		ParamSetting::MaskPath = _T("res/mh_mask.bmp");
-		ParamSetting::ClickSoundPath = _T("sounds/mh_click.wav");
-		ParamSetting::ClearSoundPath = _T("sounds/mh_clear.wav");
+	case 0: // 卡通主题
+		ParamSetting::BGPath = _T("res\\mh_bg.bmp");
+		ParamSetting::ElementPath = _T("res\\mh_element.bmp");
+		ParamSetting::MaskPath = _T("res\\mh_mask.bmp");
+		ParamSetting::ClickSoundPath = _T("sounds\\mh_click.wav");
+		ParamSetting::ClearSoundPath = _T("sounds\\mh_clear.wav");
+		ParamSetting::BGMSoundPath = _T("sounds\\bgm.mp3");
 		break;
 	}
+
+	// 添加日志输出，便于调试
+	TRACE(_T("设置已更新 - 行: %d, 列: %d, 图片数: %d, 主题: %d\n"), 
+		  ParamSetting::GetMapRow(), ParamSetting::GetMapCol(), 
+		  ParamSetting::GetPicCount(), ParamSetting::ThemeNo);
+	TRACE(_T("背景路径: %s\n"), ParamSetting::BGPath);
 
 	CDialogEx::OnOK();
 }

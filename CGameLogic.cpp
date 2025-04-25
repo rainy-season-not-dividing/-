@@ -136,7 +136,7 @@ bool CGameLogic::LinkOneCorner(Vertex V1, Vertex V2)
 //判断V1和V2在经过两个拐角相连
 bool CGameLogic::LinkTwoCorner(Vertex V1, Vertex V2)
 {
-    for (int nCol = 0; nCol < Cols; nCol++)
+    for (int nCol = 0; nCol < cols; nCol++)
     {
         if (GameMap[V1.row][nCol] == BLANK && GameMap[V2.row][nCol] == BLANK)
         {
@@ -153,7 +153,7 @@ bool CGameLogic::LinkTwoCorner(Vertex V1, Vertex V2)
             }
         }
     }
-    for (int nRow = 0; nRow < Rows; nRow++)
+    for (int nRow = 0; nRow < rows; nRow++)
     {
         if (GameMap[nRow][V1.col] == BLANK && GameMap[nRow][V2.col] == BLANK)
         {
@@ -205,7 +205,7 @@ bool CGameLogic::IsLink(Vertex V1, Vertex V2)
             verList.push(V2);
             return true;
         }
-        else if (V1.row == Rows - 1)
+        else if (V1.row == rows - 1)
         {
             //边界情况，第Rows-1行，则增加外边框的点作为路径
             verList.push({ V1.row + 1,V1.col,0 });
@@ -230,7 +230,7 @@ bool CGameLogic::IsLink(Vertex V1, Vertex V2)
             verList.push(V2);
             return true;
         }
-        else if (V1.col == Cols - 1)
+        else if (V1.col == cols - 1)
         {
             //边界情况，第Cols-1列，则增加外边框的点作为路径
             verList.push({ V1.row,V1.col + 1,0 });
@@ -265,9 +265,9 @@ void CGameLogic::Clear(Vertex V1, Vertex V2)
 //判断所有的图片是否已经全部消除
 bool CGameLogic::isBlank()
 {
-    for (int i = 0; i < Rows; i++)
+    for (int i = 0; i < rows; i++)
     {
-        for (int j = 0; j < Cols; j++)
+        for (int j = 0; j < cols; j++)
         {
             if (this->GameMap[i][j] != BLANK)
             {

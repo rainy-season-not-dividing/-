@@ -111,7 +111,7 @@ private:
 public:
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point); // 鼠标左键松开事件
 	afx_msg void OnEnChangeEdit1();
-	afx_msg void OnBnClickedBtnSetting(); // 设置按钮点击事件
+	afx_msg void OnBnClickedBinSetting(); // 设置按钮点击事件
 
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };
