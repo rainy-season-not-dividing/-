@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "CGameLogic.h"
-
-
+#include <time.h>
 
 CGameLogic::~CGameLogic()
 {
@@ -47,7 +46,7 @@ void CGameLogic::InitMap(int nRows, int nCols, int nPicNum)
     {
         int nIndex1 = rand() % nVertexNum;
         int nIndex2 = rand() % nVertexNum;
-        //两个下表交换
+        //两个下标交换
         int nTmp = GameMap[nIndex1 / nCols][nIndex1 % nCols];
         GameMap[nIndex1 / nCols][nIndex1 % nCols] = GameMap[nIndex2 / nCols][nIndex2 % nCols];
         GameMap[nIndex2 / nCols][nIndex2 % nCols] = nTmp;

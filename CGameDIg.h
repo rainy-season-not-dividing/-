@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "afxdialogex.h"
 #include "CGameControl.h"
+#include "CGameControlGraph.h"			//图实现
 
 // 添加MCI支持
 #include <mmsystem.h>
@@ -68,6 +69,7 @@ protected:
 
 	// 创建一个CGameControl对象
 	CGameControl m_GameC;
+	//CGameControlGraph m_GameC;
 	bool playing;	  // 游戏是否进行中
 	bool firstSelect; // true表示prepared for第一个点
 
