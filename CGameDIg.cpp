@@ -33,7 +33,7 @@ CGameDIg::CGameDIg(CWnd *pParent /*=nullptr*/)
     m_strBGMusicPath = ParamSetting::BGMSoundPath;
     m_strClickSoundPath = ParamSetting::ClickSoundPath;
     m_strClickPicSoundPath = ParamSetting::ClearSoundPath;
-    m_strEliminateSoundPath = _T("sounds\\power.mp3");
+    m_strEliminateSoundPath = ParamSetting::ClearSoundPath;
     m_bPlayingBGMusic = FALSE;
 
     m_GameRegionTop.y = MAP_TOP;  // 50
